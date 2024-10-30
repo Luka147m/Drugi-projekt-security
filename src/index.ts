@@ -57,11 +57,6 @@ const sanitizeOptions = {
     disallowedTagsMode: 'recursiveEscape' as DisallowedTagsModes
 };
 
-app.use((req: Request, res: Response, next) => {
-    res.locals.externalUrl = externalUrl || 'http://localhost:8000';
-    next();
-});
-
 app.get('/', (req: Request, res: Response) => {
     res.render('index');
 })
