@@ -12,7 +12,7 @@ dotenv.config();
 const app = express();
 
 const externalUrl = process.env.EXTERNAL_URL || null;
-const port = externalUrl && process.env.PORT ? parseInt(process.env.PORT) : 8000;
+const port = externalUrl && process.env.PORT ? parseInt(process.env.PORT) : 8080;
 const baseUrl = process.env.NODE_ENV === 'production'
     ? 'https://prvi-projekt-auth-web.onrender.com'
     : `https://localhost:${port}`;
