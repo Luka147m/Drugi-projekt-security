@@ -1,0 +1,11 @@
+doctype html
+html
+    head
+        title Pohranjeni XSS
+        link(rel="stylesheet" href="/style.css")
+        script(src="/script.js")
+
+    body
+        button.action-btn(onclick="location.href='/'") Početna
+        button.action-btn(onclick="location.href='/pohranjeniXSS'") Primjer pohranjeni XSS
+        button.action-btn(onclick="location.href='/login'") Prijava

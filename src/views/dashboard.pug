@@ -1,0 +1,14 @@
+doctype html
+html
+    head
+        title Dashboard
+    body
+        h1 Dashboard
+        if user
+            h2 Welcome #{user.username}
+            p Your role: #{user.role}
+            a(href='/admin') Go to Admin Page
+            form(action='/logout' method='POST')
+                button(type='submit') Logout
+        else
+            p You are not logged in.

@@ -1,0 +1,32 @@
+{
+  "name": "drugi-projekt-security",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run clean && tsc && npm run copy-views && npm run copy-public",
+    "clean": "rm -rf dist",
+    "copy-views": "cp -r src/views/ dist/views/",
+    "copy-public": "cp -r src/public/ dist/public/",
+    "start": "node dist/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-session": "^1.18.1",
+    "pug": "^3.0.3",
+    "sanitize-html": "^2.13.1",
+    "tsc": "^2.0.4",
+    "typescript": "^5.6.3"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.7",
+    "@types/express": "^5.0.0",
+    "@types/express-session": "^1.18.0",
+    "@types/sanitize-html": "^2.13.0"
+  }
+}

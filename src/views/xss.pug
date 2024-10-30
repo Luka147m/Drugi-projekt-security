@@ -1,0 +1,46 @@
+doctype html
+html
+    head
+        title Pohranjeni XSS
+        link(rel="stylesheet" href="/style.css")
+        script(src="/script.js")
+
+    body
+        button.action-btn(onclick="location.href='/'") Početna
+        button.action-btn(onclick="location.href='/kontrolaPristupa'") Primjer loše kontrole pristupa
+        h1 Primjer pohranjeni Cross-site scripting (XSS)
+        p Pohranjeni ili perzistentni (trajni) XSS je vrsta sigurnosne ranjivosti u kojoj se maliciozni kod pohranjuje na poslužitelju.<br>
+            | Napadač najčešće putem forme ili polja za unos, ako nema potrebnu zaštitu (validaciju polja za unos...), umeće svoj željeni maliciozni kod.<br>
+            | Poslužitelj sprema taj maliciozni kod bez provjere.<br>
+            | Svaki puta kada netko pristupi tom poslužitelju, korisniku se bez njegovog znanja šalje i spremljena maliciozna skripta<br>
+            | Ta skripta se automatski pokrene, često bez znanja korisnika
+            | Glavni način zaštite protiv pohranjenog XSS napada je validacija i sanitizacija teksta na strani poslužitelja.<br>
+            | HTML tagovi poput &lt;script&gt; se prepoznaju i tretiraju kao obični tekst tako da se zamjene (escapeaju) s HTML entitetima poput &amp;lt; i &amp;gt;.<br>
+            | Korištenje HTTP-Only i Secure zastavica za kolačiće da im se ne može pristupiti pomoću javascripta
+
+        div.container
+            div.comment
+                h2 Dodaj komentar
+                form(action="/addComment" method="POST")
+                    textarea(name="comment" required)
+                    br
+                    button(type="submit") Dodaj
+            div.options
+                button.action-btn(onclick="deleteComments()") Obriši komentare
+
+                button.action-btn(onclick="toggleXSSProtection()" id="protection-btn")
+                    | Zaštita je trenutno 
+                    span
+                        if xssProtection
+                            | uključena!
+                        else
+                            | isključena!
+
+                if xssProtection
+                    img(src="/favicon-32x32.png" alt="Štit" id="protection-icon")
+                else
+                    img(src="/favicon-32x32.png" alt="Štit" id="protection-icon" style="visibility: hidden;")
+        h1 Komentari
+        ul
+            each comment in comments
+                li !{comment}
