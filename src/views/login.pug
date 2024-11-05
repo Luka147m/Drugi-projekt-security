@@ -2,16 +2,32 @@ doctype html
 html
     head
         title Login
+        link(rel="stylesheet" href="/style.css")
+
+    header 
+        button.action-btn(onclick="location.href='/'") Početna
+        button.action-btn(onclick="location.href='/kontrolaPristupa'") Primjer loše kontrole pristupa
+        button.action-btn(onclick="location.href='/pohranjeniXSS'") Primjer pohranjeni XSS
+
     body
         h1 Login
-        form(action='/login' method='POST')
+        h4(style='margin-bottom: 0px') Podaci za prijavu
+        div(style='display:flex; flex-direction: row; gap: 50px;')
+            p Administrator<br>
+                | username: admin<br>
+                | password: adminpass<br>
+            p Korisnik<br>
+                | username: user<br>
+                | password: userpass<br>
+
+        form.login(action='/login' method='POST')
             div
-                label(for='username') Username:
+                label(for='username') Username: 
                 input(type='text' name='username', required)
             div
-                label(for='password') Password:
+                label(for='password') Password: 
                 input(type='password' name='password', required)
             div
-                button(type='submit') Login
-        if error
-            p.error= error
+                button.action-btn(type='submit') Login
+                if error
+                    p.error= error

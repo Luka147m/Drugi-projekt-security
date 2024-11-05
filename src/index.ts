@@ -7,6 +7,8 @@ import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
+import pool from './database';
+
 
 dotenv.config();
 const app = express();
@@ -14,7 +16,7 @@ const app = express();
 const externalUrl = process.env.EXTERNAL_URL || null;
 const port = externalUrl && process.env.PORT ? parseInt(process.env.PORT) : 8080;
 const baseUrl = process.env.NODE_ENV === 'production'
-    ? 'https://prvi-projekt-auth-web.onrender.com'
+    ? 'https://drugi-projekt-security.onrender.com/'
     : `https://localhost:${port}`;
 
 
@@ -33,8 +35,7 @@ app.use(session({
 }));
 
 let comments: string[] = [];
-const MAX_COMMENT_LENGTH = 200;
-const MAX_COMMENTS = 10;
+const MAX_COMMENT_LENGTH = 400;
 let xssProtection: boolean = false;
 
 const users: { [key: string]: { role: string; username: string; password: string } } = {
@@ -65,11 +66,18 @@ app.get('/pohranjeniXSS', (req: Request, res: Response) => {
     res.render('xss', { comments, xssProtection });
 })
 
-app.get('/kontrolaPristupa', (req: Request, res: Response) => {
-    res.render('access', { allowBrokenAccessControl });
+app.get('/comments', async (req: Request, res: Response) => {
+    const query = 'SELECT * FROM comments ORDER BY id DESC';
+    try {
+        const result = await pool.query(query);
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error('Pogreška tijekom dohvaćanja komentara:', err);
+        res.status(500).send('Server error');
+    }
 })
 
-app.post('/addComment', (req: Request, res: Response) => {
+app.post('/addComment', async (req: Request, res: Response) => {
     let comment: string = req.body.comment
 
     if (comment.length > MAX_COMMENT_LENGTH) {
@@ -80,12 +88,39 @@ app.post('/addComment', (req: Request, res: Response) => {
         comment = sanitizeHtml(comment, sanitizeOptions)
     }
 
-    if (comments.length >= MAX_COMMENTS) {
-        comments.shift();
+    const query = 'INSERT INTO comments (comment_text) VALUES ($1)';
+    try {
+        const result = await pool.query(query, [comment]);
+        res.status(201).json({ success: true, comment: result.rows[0] });
+    } catch (err) {
+        console.error('Pogreška tijekom unosa komentara:', err);
+        res.status(500).json({ success: false, error: 'Server error' });
     }
+});
 
-    comments.push(comment)
-    res.redirect('/pohranjeniXSS')
+app.delete('/comments/:id', async (req, res) => {
+    const id = req.params.id;
+    try {
+        const result = await pool.query('DELETE FROM comments WHERE id = $1', [id]);
+        if (result.rowCount! > 0) {
+            res.status(200).send('Komentar uspješno obrisan');
+        } else {
+            res.status(404).send('Komentar nije pronađen');
+        }
+    } catch (error) {
+        console.error('Pogreška tijekom brisanja komentara:', error);
+        res.status(500).send('Server error');
+    }
+});
+
+app.delete('/comments', async (req, res) => {
+    try {
+        await pool.query('TRUNCATE TABLE comments;');
+        res.status(200).send('Komentari uspješno obrisani');
+    } catch (error) {
+        console.error('Pogreška tijekom brisanja komentara:', error);
+        res.status(500).send('Server error');
+    }
 });
 
 app.post('/toggleXSSProtection', (req: Request, res: Response) => {
@@ -93,10 +128,10 @@ app.post('/toggleXSSProtection', (req: Request, res: Response) => {
     res.status(200).send({ xssProtection })
 });
 
-app.post('/deleteComments', (req: Request, res: Response) => {
-    comments = [];
-    res.status(200).send()
-});
+app.get('/kontrolaPristupa', (req: Request, res: Response) => {
+    const userInfo = req.cookies.userInfo ? JSON.parse(req.cookies.userInfo) : null;
+    res.render('access', { brokenAccessProtection, userInfo });
+})
 
 app.get('/login', (req: Request, res: Response) => {
     res.render('login');
@@ -107,15 +142,15 @@ app.post('/login', (req: Request, res: Response) => {
     if (users[username] && users[username].password === password) {
         req.session.user = { username, role: users[username].role };
 
-        res.cookie('userRole', users[username].role, {
+        res.cookie('userInfo', JSON.stringify({ username, role: users[username].role }), {
             maxAge: 900000,
             httpOnly: true,
             secure: true
         });
 
-        return res.redirect('/dashboard');
+        return res.redirect('/kontrolaPristupa');
     }
-    res.redirect('/');
+    return res.render('login', { error: 'Neispravan username ili šifra' });
 });
 
 app.get('/dashboard', (req: Request, res: Response) => {
@@ -125,18 +160,18 @@ app.get('/dashboard', (req: Request, res: Response) => {
     res.render('dashboard', { user, userRole });
 });
 
-let allowBrokenAccessControl = false;
+let brokenAccessProtection = false;
 
-app.post('/toggle-access-control', (req: Request, res: Response) => {
-    allowBrokenAccessControl = !allowBrokenAccessControl;
-    res.redirect('/dashboard');
+app.post('/toggleAccessControl', (req: Request, res: Response) => {
+    brokenAccessProtection = !brokenAccessProtection;
+    res.status(200).send({ brokenAccessProtection })
 });
 
 app.get('/admin', (req: Request, res: Response) => {
     const user = req.session.user;
     const userRole = req.cookies.userRole;
 
-    if (!allowBrokenAccessControl && (!user || user.role !== 'admin')) {
+    if (!brokenAccessProtection && (!user || user.role !== 'admin')) {
         res.status(403).send('Access denied: Unauthorized access.');
         return
     }
@@ -146,14 +181,12 @@ app.get('/admin', (req: Request, res: Response) => {
 app.post('/logout', (req: Request, res: Response) => {
     req.session.destroy((err) => {
         if (err) {
-            return res.status(500).send('Could not log out.');
+            return res.status(500).send('Pogreška tijekom odjave.');
         }
-        res.clearCookie('userRole');
-        res.redirect('/');
+        res.clearCookie('userInfo');
+        res.status(200).send('Odjava uspješna.');
     });
 });
-
-
 
 
 if (externalUrl) {

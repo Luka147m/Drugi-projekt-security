@@ -2,7 +2,15 @@ doctype html
 html
     head
         title Početna stranica
+        link(rel="stylesheet" href="/style.css")
+
     body
-        h1 Hello world!
+        h1 Drugi projekt iz predmeta web2
         button.action-btn(onclick="location.href='/pohranjeniXSS'") Primjer pohranjeni XSS
         button.action-btn(onclick="location.href='/kontrolaPristupa'") Primjer loše kontrole pristupa
+        p Napravljena su dva primjera sigurnosnih nedostataka 
+        ul
+            li Cross-site scripting (XSS) - Pohranjeni
+            li Loša kontrola pristupa (Broken Access Control)
+        p Klikom na gumbove iznad možete otići na pojedinačne stranice primjera s detaljnim opisom kako rade.
+        p Luka Miličević 0036543289

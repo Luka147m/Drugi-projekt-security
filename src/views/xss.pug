@@ -10,24 +10,45 @@ html
         button.action-btn(onclick="location.href='/kontrolaPristupa'") Primjer loše kontrole pristupa
         h1 Primjer pohranjeni Cross-site scripting (XSS)
         p Pohranjeni ili perzistentni (trajni) XSS je vrsta sigurnosne ranjivosti u kojoj se maliciozni kod pohranjuje na poslužitelju.<br>
-            | Napadač najčešće putem forme ili polja za unos, ako nema potrebnu zaštitu (validaciju polja za unos...), umeće svoj željeni maliciozni kod.<br>
-            | Poslužitelj sprema taj maliciozni kod bez provjere.<br>
-            | Svaki puta kada netko pristupi tom poslužitelju, korisniku se bez njegovog znanja šalje i spremljena maliciozna skripta<br>
-            | Ta skripta se automatski pokrene, često bez znanja korisnika
+            | Do XSS napada dolazi kada napadač najčešće putem forme ili polja za unos, ako nema potrebnu zaštitu (validaciju polja za unos...), umeće svoj željeni maliciozni kod i poslužitelj bez ikakve provjere sprema taj maliciozni kod.<br>
+            | Svaki puta kada netko pristupi tom poslužitelju, korisniku se bez njegovog znanja šalje i spremljena maliciozna skripta koja se automatski pokrene, često bez znanja korisnika <br>
             | Glavni način zaštite protiv pohranjenog XSS napada je validacija i sanitizacija teksta na strani poslužitelja.<br>
-            | HTML tagovi poput &lt;script&gt; se prepoznaju i tretiraju kao obični tekst tako da se zamjene (escapeaju) s HTML entitetima poput &amp;lt; i &amp;gt;.<br>
-            | Korištenje HTTP-Only i Secure zastavica za kolačiće da im se ne može pristupiti pomoću javascripta
+            | HTML tagovi poput &lt;script&gt; se prepoznaju i tretiraju kao obični tekst tako da se zamjene (escape-aju) s HTML entitetima poput &amp;lt; i &amp;gt;.<br>
+            | Također možemo zaštiti i kolačiće korištenjem Http-Only i Secure zastavica
+
+        div 
+            h2 Koraci za primjer 
+            ol 
+                li Isključimo zaštitu (gumb desno od unosa)
+                li Unosimo tekst/skriptu u polje za unos i dodamo ju
+                    ul 
+                        li Pr.1 &lt;img src='x' onerror='alert(document.cookie)'&gt;
+                        li Pr.2 &lt;div onclick="location.href='https://www.fer.unizg.hr/'" style="color: red;"&gt;Klikni me&lt;/div&gt;
+                li 
+                    div Pr.1 će otvoriti prozorčić u kojem možemo vidjeti kolačić<br>
+                        | Pr.2 će klikom preusmjeriti na fer stranicu
+                li Obrišemo primjere koji izvode XSS napad (ikona košarice ili gumb obriši sve)
+                li Uključimo zaštitu i ponovimo napade koje smo izveli
+                li Poslužitelj radi sanitizaciju teksta, skripte se ne izvode i prikazuje ih kao tekst
+
+        div 
+            h3 Komentar: zašto ne radi script tag?
+            p Prilikom dohvaćanja komentara i prikazivanja, elementi se pomoću javascript-a stvaraju i dodavaju na zaslon.<br>
+                | Oni se dodaju pomoću innerHTML property, koji bi u pravilu trebao što god da mu predamo tretirati to kao HTML,<br>
+                | ali jer je predviđena opasnost od XSS napada u HTML5 dokumentaciji je napisano da &lt;script&gt; tag unutar innerHTML se neće izvoditi<br>
+                | Jedan zaobilazni način koji radi (i korišten je u primjerima) je pomoću atributa poput onerror (pokrenemo namjernom pogreškom) ili onclick, onhover i sličnim unutar tagova poput div, p, img...<br>
+                | Da radimo server-side rendering i vraćamo samo HTML tada bi se skripte sa script tagovima mogle pokrenuti
+            a(href="https://www.w3.org/TR/2008/WD-html5-20080610/dom.html#innerhtml0") HTML5 dokumentacija<br>
+            a(href="https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML") InnerHTML MDNdocs
 
         div.container
             div.comment
                 h2 Dodaj komentar
-                form(action="/addComment" method="POST")
+                form(onSubmit="addComment(event)")
                     textarea(name="comment" required)
                     br
                     button(type="submit") Dodaj
             div.options
-                button.action-btn(onclick="deleteComments()") Obriši komentare
-
                 button.action-btn(onclick="toggleXSSProtection()" id="protection-btn")
                     | Zaštita je trenutno 
                     span
@@ -40,7 +61,12 @@ html
                     img(src="/favicon-32x32.png" alt="Štit" id="protection-icon")
                 else
                     img(src="/favicon-32x32.png" alt="Štit" id="protection-icon" style="visibility: hidden;")
-        h1 Komentari
-        ul
-            each comment in comments
-                li !{comment}
+        div.comment-header
+            h1 Komentari
+            button.delete-all-btn(onclick="deleteAllComments()" id="delete-all-btn") Obriši sve
+        ul(id="comments-ul")
+            //- each comment in comments
+            //-     li
+            //-         div.list-item
+            //-             span.item-text !{comment.comment_text}
+            //-             button.delete-button(onclick=`deleteComment(${comment.id})`) 🗑️

@@ -1,11 +1,33 @@
 doctype html
 html
     head
-        title Pohranjeni XSS
+        title Kontrola pristupa
         link(rel="stylesheet" href="/style.css")
         script(src="/script.js")
 
     body
         button.action-btn(onclick="location.href='/'") Početna
         button.action-btn(onclick="location.href='/pohranjeniXSS'") Primjer pohranjeni XSS
-        button.action-btn(onclick="location.href='/login'") Prijava
+        if !userInfo
+            button.action-btn(onclick="location.href='/login'") Prijava
+        else
+            button.action-btn(onclick="logout()") Odjava
+        h3 Primjer loše kontrole pristupa 
+        button.action-btn(onclick="toggleBrokenAccess()" id="protection-btn")
+            | Zaštita je trenutno 
+            span
+            if brokenAccessProtection
+                | uključena!
+            else
+                | isključena!
+        if brokenAccessProtection
+            img(src="/favicon-32x32.png" alt="Štit" id="protection-icon")
+        else
+            img(src="/favicon-32x32.png" alt="Štit" id="protection-icon" style="visibility: hidden;")
+        if userInfo
+            p Prijavljeni ste kao #{userInfo.username} te imate ulogu #{userInfo.role}
+        else
+            p Prijavite se kako bi ste testirali uključenu zaštitu pristupa (admin samo može pristupiti admin stranici)
+        ol 
+            li  Prvo je potrebno prijaviti se kao user ili kao admin (pristupni podaci na stranici za login)
+            li  Pokušati otići na admin stranicu
