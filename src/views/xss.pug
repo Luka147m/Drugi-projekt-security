@@ -3,7 +3,7 @@ html
     head
         title Pohranjeni XSS
         link(rel="stylesheet" href="/style.css")
-        script(src="/script.js")
+        script(src="/xssScript.js")
 
     body
         button.action-btn(onclick="location.href='/'") Početna
@@ -30,6 +30,15 @@ html
                 li Obrišemo primjere koji izvode XSS napad (ikona košarice ili gumb obriši sve)
                 li Uključimo zaštitu i ponovimo napade koje smo izveli
                 li Poslužitelj radi sanitizaciju teksta, skripte se ne izvode i prikazuje ih kao tekst
+
+            p *Kada je zaštita isključena i dodan je komentar on će uvijek biti nesiguran jer je spremljen bez sanitizacije 
+
+        div 
+            h3 Zaštita napravljena pomoću
+            ul 
+                li sanitize-html npm modula, koji provodi sanitizaciju teksta, zamjenuje tagove s entitetima 
+                    a(href="https://www.npmjs.com/package/sanitize-html") sanitize-html
+                li Secure i Http-Only zastavice onemogućuju pristup kolačićima putem JavaScripta
 
         div 
             h3 Komentar: zašto ne radi script tag?

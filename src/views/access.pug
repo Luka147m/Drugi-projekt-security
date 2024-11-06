@@ -3,15 +3,27 @@ html
     head
         title Kontrola pristupa
         link(rel="stylesheet" href="/style.css")
-        script(src="/script.js")
+        script(src="/accessScript.js")
 
     body
-        button.action-btn(onclick="location.href='/'") Početna
-        button.action-btn(onclick="location.href='/pohranjeniXSS'") Primjer pohranjeni XSS
-        if !userInfo
-            button.action-btn(onclick="location.href='/login'") Prijava
+        if user
+            div.profile-container
+                img.profile-image(src=user.picture alt="Profile Picture")
+                div.profile-details
+                    p.profile-name #{user.name}
+                    p.profile-email #{user.email}
+                    p.profile-roles
+                        | Uloge: #{roles_string} 
+
+            div                    
+                button.action-btn(onclick="location.href='/'") Početna
+                button.action-btn(onclick="location.href='/pohranjeniXSS'") Primjer pohranjeni XSS
+                button.logout-btn(onclick="location.href='/logout'") Logout
         else
-            button.action-btn(onclick="logout()") Odjava
+            button.action-btn(onclick="location.href='/'") Početna
+            button.action-btn(onclick="location.href='/pohranjeniXSS'") Primjer pohranjeni XSS
+            button.action-btn(onclick="location.href='/login'") Prijava
+
         h3 Primjer loše kontrole pristupa 
         button.action-btn(onclick="toggleBrokenAccess()" id="protection-btn")
             | Zaštita je trenutno 
@@ -31,3 +43,5 @@ html
         ol 
             li  Prvo je potrebno prijaviti se kao user ili kao admin (pristupni podaci na stranici za login)
             li  Pokušati otići na admin stranicu
+
+        button.action-btn(onclick="location.href='/admin'") Admin stranica

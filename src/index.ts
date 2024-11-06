@@ -1,13 +1,10 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import https from 'https';
 import fs from 'fs';
-import sanitizeHtml, { IOptions, DisallowedTagsModes } from 'sanitize-html';
 import dotenv from 'dotenv';
-import bodyParser from 'body-parser';
-import session from 'express-session';
-import cookieParser from 'cookie-parser';
 import pool from './database';
+import { auth, requiresAuth } from 'express-openid-connect';
 
 
 dotenv.config();
@@ -16,54 +13,51 @@ const app = express();
 const externalUrl = process.env.EXTERNAL_URL || null;
 const port = externalUrl && process.env.PORT ? parseInt(process.env.PORT) : 8080;
 const baseUrl = process.env.NODE_ENV === 'production'
-    ? 'https://drugi-projekt-security.onrender.com/'
+    ? 'https://drugi-projekt-security.onrender.com'
     : `https://localhost:${port}`;
 
+const config = {
+    authRequired: false,
+    idpLogout: true,
+    secret: process.env.SECRET,
+    baseURL: baseUrl,
+    clientID: process.env.CLIENT_ID,
+    issuerBaseURL: process.env.AUTH0_DOMAIN,
+    clientSecret: process.env.CLIENT_SECRET,
+    authorizationParams: {
+        response_type: 'code',
+        scope: 'openid profile email',
+    },
+    routes: {
+        login: 'false',
+        callback: 'false',
+        postLogoutRedirect: '/kontrolaPristupa',
+    },
+};
 
+app.use(auth(config));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../dist/public')));
 app.set('views', path.join(__dirname, '../dist/views'));
 app.set("view engine", "pug");
 
-app.use(cookieParser());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(session({
-    secret: process.env.SECRET ?? 'cookiemonsterislost',
-    resave: false,
-    saveUninitialized: true,
-}));
+const MAX_COMMENT_LENGTH = 400; // Da ne zauzima puno mjesta u db
+let xssProtection: boolean = true;
+let brokenAccessProtection: boolean = true;
 
-let comments: string[] = [];
-const MAX_COMMENT_LENGTH = 400;
-let xssProtection: boolean = false;
-
-const users: { [key: string]: { role: string; username: string; password: string } } = {
-    user: { role: 'user', username: 'user', password: 'userpass' },
-    admin: { role: 'admin', username: 'admin', password: 'adminpass' },
-};
-
-declare module 'express-session' {
-    interface SessionData {
-        user: {
-            username: string;
-            role: string;
-        };
+declare module 'express-openid-connect' {
+    interface AccessToken {
+        'app-roles/roles'?: string[];
     }
 }
-
-const sanitizeOptions = {
-    allowedTags: [],
-    allowedAttributes: {},
-    disallowedTagsMode: 'recursiveEscape' as DisallowedTagsModes
-};
 
 app.get('/', (req: Request, res: Response) => {
     res.render('index');
 })
 
 app.get('/pohranjeniXSS', (req: Request, res: Response) => {
-    res.render('xss', { comments, xssProtection });
+    res.render('xss', { xssProtection });
 })
 
 app.get('/comments', async (req: Request, res: Response) => {
@@ -77,6 +71,15 @@ app.get('/comments', async (req: Request, res: Response) => {
     }
 })
 
+function sanitizeHTML(str: string) {
+    return str.replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/`/g, '&#96;');
+}
+
 app.post('/addComment', async (req: Request, res: Response) => {
     let comment: string = req.body.comment
 
@@ -85,7 +88,7 @@ app.post('/addComment', async (req: Request, res: Response) => {
     }
 
     if (xssProtection) {
-        comment = sanitizeHtml(comment, sanitizeOptions)
+        comment = sanitizeHTML(comment)
     }
 
     const query = 'INSERT INTO comments (comment_text) VALUES ($1)';
@@ -129,64 +132,51 @@ app.post('/toggleXSSProtection', (req: Request, res: Response) => {
 });
 
 app.get('/kontrolaPristupa', (req: Request, res: Response) => {
-    const userInfo = req.cookies.userInfo ? JSON.parse(req.cookies.userInfo) : null;
-    res.render('access', { brokenAccessProtection, userInfo });
-})
-
-app.get('/login', (req: Request, res: Response) => {
-    res.render('login');
-})
-
-app.post('/login', (req: Request, res: Response) => {
-    const { username, password } = req.body;
-    if (users[username] && users[username].password === password) {
-        req.session.user = { username, role: users[username].role };
-
-        res.cookie('userInfo', JSON.stringify({ username, role: users[username].role }), {
-            maxAge: 900000,
-            httpOnly: true,
-            secure: true
-        });
-
-        return res.redirect('/kontrolaPristupa');
+    const user = req.oidc.user;
+    const roles = req.oidc.user?.['app-roles/roles'] ?? [];
+    if (roles.length < 1) {
+        roles.push("Nema uloga")
     }
-    return res.render('login', { error: 'Neispravan username ili šifra' });
-});
-
-app.get('/dashboard', (req: Request, res: Response) => {
-    const user = req.session.user;
-    const userRole = req.cookies.userRole;
-
-    res.render('dashboard', { user, userRole });
-});
-
-let brokenAccessProtection = false;
+    const roles_string = roles.join(", ")
+    res.render('access', { brokenAccessProtection, user, roles_string });
+})
 
 app.post('/toggleAccessControl', (req: Request, res: Response) => {
     brokenAccessProtection = !brokenAccessProtection;
     res.status(200).send({ brokenAccessProtection })
 });
 
-app.get('/admin', (req: Request, res: Response) => {
-    const user = req.session.user;
-    const userRole = req.cookies.userRole;
+app.get('/admin', requiresAuth(), (req: Request, res: Response) => {
 
-    if (!brokenAccessProtection && (!user || user.role !== 'admin')) {
-        res.status(403).send('Access denied: Unauthorized access.');
-        return
+    const roles = req.oidc.user?.['app-roles/roles'];
+    if (roles && roles.includes('admin')) {
+        res.send("pozdrav administratore")
+    } else {
+        res.send("nemate privilegije")
+
     }
-    res.send('Welcome to the admin page!');
 });
 
-app.post('/logout', (req: Request, res: Response) => {
-    req.session.destroy((err) => {
-        if (err) {
-            return res.status(500).send('Pogreška tijekom odjave.');
-        }
-        res.clearCookie('userInfo');
-        res.status(200).send('Odjava uspješna.');
-    });
-});
+app.get('/login', (req, res) =>
+    res.oidc.login({
+        returnTo: '/kontrolaPristupa',
+        authorizationParams: {
+            redirect_uri: baseUrl + '/callback',
+        },
+    })
+);
+
+app.get('/callback', (req, res) =>
+    res.oidc.callback({
+        redirectUri: baseUrl + '/callback',
+    })
+);
+
+app.post('/callback', express.urlencoded({ extended: false }), (req, res) =>
+    res.oidc.callback({
+        redirectUri: baseUrl + '/callback',
+    })
+);
 
 
 if (externalUrl) {
