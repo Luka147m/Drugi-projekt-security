@@ -33,23 +33,6 @@ html
 
             p *Kada je zaštita isključena i dodan je komentar on će uvijek biti nesiguran jer je spremljen bez sanitizacije 
 
-        div 
-            h3 Zaštita napravljena pomoću
-            ul 
-                li sanitize-html npm modula, koji provodi sanitizaciju teksta, zamjenuje tagove s entitetima 
-                    a(href="https://www.npmjs.com/package/sanitize-html") sanitize-html
-                li Secure i Http-Only zastavice onemogućuju pristup kolačićima putem JavaScripta
-
-        div 
-            h3 Komentar: zašto ne radi script tag?
-            p Prilikom dohvaćanja komentara i prikazivanja, elementi se pomoću javascript-a stvaraju i dodavaju na zaslon.<br>
-                | Oni se dodaju pomoću innerHTML property, koji bi u pravilu trebao što god da mu predamo tretirati to kao HTML,<br>
-                | ali jer je predviđena opasnost od XSS napada u HTML5 dokumentaciji je napisano da &lt;script&gt; tag unutar innerHTML se neće izvoditi<br>
-                | Jedan zaobilazni način koji radi (i korišten je u primjerima) je pomoću atributa poput onerror (pokrenemo namjernom pogreškom) ili onclick, onhover i sličnim unutar tagova poput div, p, img...<br>
-                | Da radimo server-side rendering i vraćamo samo HTML tada bi se skripte sa script tagovima mogle pokrenuti
-            a(href="https://www.w3.org/TR/2008/WD-html5-20080610/dom.html#innerhtml0") HTML5 dokumentacija<br>
-            a(href="https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML") InnerHTML MDNdocs
-
         div.container
             div.comment
                 h2 Dodaj komentar
@@ -74,8 +57,19 @@ html
             h1 Komentari
             button.delete-all-btn(onclick="deleteAllComments()" id="delete-all-btn") Obriši sve
         ul(id="comments-ul")
-            //- each comment in comments
-            //-     li
-            //-         div.list-item
-            //-             span.item-text !{comment.comment_text}
-            //-             button.delete-button(onclick=`deleteComment(${comment.id})`) 🗑️
+
+        div 
+            h3 Zaštita napravljena pomoću
+            ul 
+                li Sanitizacija teksta zamjenom znakova &lt;, &gt;, "", '' i `` pomoću odgovarajućih HTML entiteta
+                li Secure i Http-Only zastavice onemogućuju pristup kolačićima putem JavaScripta
+
+        div 
+            h3 Komentar: zašto ne radi script tag?
+            p Prilikom dohvaćanja komentara i prikazivanja, elementi se pomoću javascript-a stvaraju i dodavaju na zaslon.<br>
+                | Oni se dodaju pomoću innerHTML property, koji bi u pravilu trebao što god da mu predamo tretirati to kao HTML,<br>
+                | ali jer je predviđena opasnost od XSS napada u HTML5 dokumentaciji je napisano da &lt;script&gt; tag unutar innerHTML se neće izvoditi<br>
+                | Jedan zaobilazni način koji radi (i korišten je u primjerima) je pomoću atributa poput onerror (pokrenemo namjernom pogreškom) ili onclick, onhover i sličnim unutar tagova poput div, p, img...<br>
+                | Da radimo server-side rendering i vraćamo samo HTML tada bi se skripte sa script tagovima mogle pokrenuti
+            a(href="https://www.w3.org/TR/2008/WD-html5-20080610/dom.html#innerhtml0") HTML5 dokumentacija<br>
+            a(href="https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML") InnerHTML MDNdocs

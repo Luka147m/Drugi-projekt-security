@@ -1,0 +1,46 @@
+doctype html
+html
+    head
+        title Admin dashboard
+        link(rel="stylesheet" href="/style.css")
+        script(src="/accessScript.js")
+
+    body
+        if user
+            div.profile-container
+                img.profile-image(src=user.picture alt="Profile Picture")
+                div.profile-details
+                    p.profile-name #{user.name}
+                    p.profile-email #{user.email}
+                    p.profile-roles
+                        | Uloge: #{roles_string} 
+
+            div                    
+                button.action-btn(onclick="location.href='/'") Početna
+                button.action-btn(onclick="location.href='/pohranjeniXSS'") Primjer pohranjeni XSS
+                button.logout-btn(onclick="location.href='/logout'") Logout
+        else
+            button.action-btn(onclick="location.href='/'") Početna
+            button.action-btn(onclick="location.href='/pohranjeniXSS'") Primjer pohranjeni XSS
+            button.action-btn(onclick="location.href='/login'") Prijava
+
+        button.action-btn(onclick="location.href='/dashboard/user'") User stranica
+        button.action-btn(onclick="location.href='/dashboard/admin'") Admin stranica
+
+        h3 Admin dashboard
+        button.action-btn(onclick="toggleBrokenAccess()" id="protection-btn")
+            | Zaštita je trenutno 
+            span
+            if brokenAccessProtection
+                | uključena!
+            else
+                | isključena!
+        if brokenAccessProtection
+            img(src="/favicon-32x32.png" alt="Štit" id="protection-icon")
+        else
+            img(src="/favicon-32x32.png" alt="Štit" id="protection-icon" style="visibility: hidden;")
+        h2 Ovo je stranica kojoj samo administratori imaju pristup.
+        h2 Tu se nalaze informacije i kontrole koje imaju <b>samo</b> administratori, pristup ovoj stranici mora biti ograničen ispitivanjem prava pristupa.
+        p.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas sed tempus diam. Nullam sodales felis ut viverra semper. Proin tempor cursus ligula, ac commodo nunc ultricies sit amet. Sed eu venenatis justo, vel gravida metus. Vestibulum condimentum orci ut turpis facilisis facilisis. Duis ex magna, hendrerit at tempus eget, feugiat sed tellus. Fusce ut pharetra dolor. Etiam volutpat ante ipsum, vestibulum vulputate ligula ultricies ut. Nullam suscipit eleifend mi at volutpat. Vestibulum at congue lorem. Nulla velit est, fermentum sit amet justo vitae, venenatis convallis velit. Nunc vulputate nisl non nibh volutpat malesuada. Praesent vitae ultricies ex. Sed mauris nisi, vulputate quis vestibulum a, dignissim non enim. Nunc posuere non risus sit amet condimentum. Suspendisse et justo dolor. Maecenas sed odio lorem. Vivamus interdum arcu eget magna ultricies posuere. Proin porttitor dui nec nibh vestibulum, ut ultrices tellus suscipit. Aliquam volutpat congue sagittis. Mauris fermentum elementum rhoncus. Nullam auctor rutrum dignissim. Interdum et malesuada fames ac ante ipsum primis in faucibus. Cras ullamcorper pulvinar ultrices. 
+

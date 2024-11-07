@@ -29,8 +29,8 @@ const config = {
         scope: 'openid profile email',
     },
     routes: {
-        login: 'false',
-        callback: 'false',
+        login: false as false,
+        // callback: false as false,
         postLogoutRedirect: '/kontrolaPristupa',
     },
 };
@@ -146,15 +146,40 @@ app.post('/toggleAccessControl', (req: Request, res: Response) => {
     res.status(200).send({ brokenAccessProtection })
 });
 
-app.get('/admin', requiresAuth(), (req: Request, res: Response) => {
-
+app.get('/dashboard/user', requiresAuth(), (req: Request, res: Response) => {
+    const user = req.oidc.user;
     const roles = req.oidc.user?.['app-roles/roles'];
-    if (roles && roles.includes('admin')) {
-        res.send("pozdrav administratore")
-    } else {
-        res.send("nemate privilegije")
-
+    if (roles.length < 1) {
+        roles.push("Nema uloga")
     }
+    const roles_string = roles.join(", ")
+
+    if (roles && roles.includes('admin')) {
+        res.redirect('/dashboard/admin')
+    } else {
+        res.render('user', { user, brokenAccessProtection, roles_string })
+    }
+
+});
+
+app.get('/dashboard/admin', requiresAuth(), (req: Request, res: Response) => {
+    const user = req.oidc.user;
+    const roles = req.oidc.user?.['app-roles/roles'];
+    if (roles.length < 1) {
+        roles.push("Nema uloga")
+    }
+    const roles_string = roles.join(", ");
+
+    if (brokenAccessProtection) {
+        if (roles && roles.includes('admin')) {
+            res.render('admin', { user, brokenAccessProtection, roles_string })
+        } else {
+            res.status(403).send("Pristup odbijen: nemate pravo pristupa stranici /dashboard/admin. Trebate imati ulogu administratora da bi mogli pristupiti ovoj stranici");
+        }
+    } else {
+        res.render('admin', { user, brokenAccessProtection, roles_string })
+    }
+
 });
 
 app.get('/login', (req, res) =>
@@ -166,17 +191,17 @@ app.get('/login', (req, res) =>
     })
 );
 
-app.get('/callback', (req, res) =>
-    res.oidc.callback({
-        redirectUri: baseUrl + '/callback',
-    })
-);
+// app.get('/callback', (req, res) =>
+//     res.oidc.callback({
+//         redirectUri: baseUrl + '/callback',
+//     })
+// );
 
-app.post('/callback', express.urlencoded({ extended: false }), (req, res) =>
-    res.oidc.callback({
-        redirectUri: baseUrl + '/callback',
-    })
-);
+// app.post('/callback', express.urlencoded({ extended: false }), (req, res) =>
+//     res.oidc.callback({
+//         redirectUri: baseUrl + '/callback',
+//     })
+// );
 
 
 if (externalUrl) {

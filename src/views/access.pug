@@ -24,7 +24,7 @@ html
             button.action-btn(onclick="location.href='/pohranjeniXSS'") Primjer pohranjeni XSS
             button.action-btn(onclick="location.href='/login'") Prijava
 
-        h3 Primjer loše kontrole pristupa 
+        h1 Primjer loše kontrole pristupa 
         button.action-btn(onclick="toggleBrokenAccess()" id="protection-btn")
             | Zaštita je trenutno 
             span
@@ -36,12 +36,23 @@ html
             img(src="/favicon-32x32.png" alt="Štit" id="protection-icon")
         else
             img(src="/favicon-32x32.png" alt="Štit" id="protection-icon" style="visibility: hidden;")
-        if userInfo
-            p Prijavljeni ste kao #{userInfo.username} te imate ulogu #{userInfo.role}
-        else
-            p Prijavite se kako bi ste testirali uključenu zaštitu pristupa (admin samo može pristupiti admin stranici)
-        ol 
-            li  Prvo je potrebno prijaviti se kao user ili kao admin (pristupni podaci na stranici za login)
-            li  Pokušati otići na admin stranicu
 
-        button.action-btn(onclick="location.href='/admin'") Admin stranica
+        p U ovom primjeru ćemo demonstrirati zaštitu pristupa tako da štitimo rutu /dashboard/admin. <br>
+            | Napadač se može prijaviti i dobiti pristup ruti /dashboard/user (njoj svi imaju pristup), te može lukavo probati pretvoriti user u admin i pokušati pristupiti ruti /dashboard/admin. <br>
+            | Ovisno je li zaštita uključena ili nije on će moći ostvariti pristup toj stranici, a zapravo ne bi smio. <br>
+            | Zaštita se provodi pomoću auth0. To je servis koji služi za autentifikaciju i autorizaciju.<br>
+            | U auth0 je potrebno kreirati aplikaciju i spojiti je s našim backendom, prijavljivanjem i odjavom upravlja auth0.<br>
+            | Također u auth0 je potrebno napraviti korisnike i dodjeliti im uloge te Action koji će nakon svakog login-a postaviti odgovarajuće uloge u OIDC objekt.<br>
+            | Poslužitelj prilikom pristupa zaštićenoj ruti, provjerava je li se korisnik prijavio i da li ima uloge za pristup toj stranici.<br>
+
+        h2 Koraci za primjer
+        ol 
+            li  Prvo je potrebno prijaviti se kao user ili kao admin 
+                p Admin - email: admin@admin.com password: Admin123!<br>User - email: tester@test.com password: Tester123!
+            li  Uključiti ili isključiti zaštitu
+            li  Pokušati otići na admin stranicu s user i admin računom
+        p Možemo primjetiti da kada je zaštita uključena obični korisnik nema pristup stranici /dashboard/admin, samo admin ima tada pristup,<br>
+            | ali kada je zaštita isključena tada i korisnik može pristupiti toj stranici.
+
+        button.action-btn(onclick="location.href='/dashboard/user'") User stranica, vodi na /dashboard/user
+        button.action-btn(onclick="location.href='/dashboard/admin'") Admin stranica, vodi na /dashboard/admin
