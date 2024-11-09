@@ -3,6 +3,9 @@ html
     head
         title Početna stranica
         link(rel="stylesheet" href="/style.css")
+        link(rel="icon" href="/favicon.ico" type="image/x-icon")
+        script(src="/indexScript.js")
+
 
     body
         h1 Drugi projekt iz predmeta web2
@@ -13,4 +16,7 @@ html
             li Cross-site scripting (XSS) - Pohranjeni
             li Loša kontrola pristupa (Broken Access Control)
         p Klikom na gumbove iznad možete otići na pojedinačne stranice primjera s detaljnim opisom kako rade.
+        p Gumb za brisanje komentara za XSS napade (slučaj ako imamo automatski redirect)
+        button.delete-all-btn(onclick="deleteAllComments()" id="delete-all-btn") Obriši sve
+
         p Luka Miličević 0036543289

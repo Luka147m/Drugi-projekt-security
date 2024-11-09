@@ -3,6 +3,7 @@ html
     head
         title Pohranjeni XSS
         link(rel="stylesheet" href="/style.css")
+        link(rel="icon" href="/favicon.ico" type="image/x-icon")
         script(src="/xssScript.js")
 
     body
@@ -11,27 +12,28 @@ html
         h1 Primjer pohranjeni Cross-site scripting (XSS)
         p Pohranjeni ili perzistentni (trajni) XSS je vrsta sigurnosne ranjivosti u kojoj se maliciozni kod pohranjuje na poslužitelju.<br>
             | Do XSS napada dolazi kada napadač najčešće putem forme ili polja za unos, ako nema potrebnu zaštitu (validaciju polja za unos...), umeće svoj željeni maliciozni kod i poslužitelj bez ikakve provjere sprema taj maliciozni kod.<br>
-            | Svaki puta kada netko pristupi tom poslužitelju, korisniku se bez njegovog znanja šalje i spremljena maliciozna skripta koja se automatski pokrene, često bez znanja korisnika <br>
+            | Svaki puta kada netko pristupi tom poslužitelju, korisniku se bez njegovog znanja šalje i spremljena maliciozna skripta koja se automatski pokrene, često bez znanja korisnika. <br>
             | Glavni način zaštite protiv pohranjenog XSS napada je validacija i sanitizacija teksta na strani poslužitelja.<br>
             | HTML tagovi poput &lt;script&gt; se prepoznaju i tretiraju kao obični tekst tako da se zamjene (escape-aju) s HTML entitetima poput &amp;lt; i &amp;gt;.<br>
             | Također možemo zaštiti i kolačiće korištenjem Http-Only i Secure zastavica
 
         div 
-            h2 Koraci za primjer 
+            h2 Koraci za primjer
+            p Bitna napomena: Kada je komentar spremljen bez zaštite, on ostaje zauvijek nesiguran jer je spremljen bez sanitizacije, 
+                | treba ga obrisati (gumb obriši sve ili košarica pored komentara) i onda probati s uključenom zaštitom
             ol 
                 li Isključimo zaštitu (gumb desno od unosa)
                 li Unosimo tekst/skriptu u polje za unos i dodamo ju
                     ul 
-                        li Pr.1 &lt;img src='x' onerror='alert(document.cookie)'&gt;
-                        li Pr.2 &lt;div onclick="location.href='https://www.fer.unizg.hr/'" style="color: red;"&gt;Klikni me&lt;/div&gt;
-                li 
-                    div Pr.1 će otvoriti prozorčić u kojem možemo vidjeti kolačić<br>
-                        | Pr.2 će klikom preusmjeriti na fer stranicu
-                li Obrišemo primjere koji izvode XSS napad (ikona košarice ili gumb obriši sve)
+                        li &lt;img src='x' onerror='alert(document.cookie)'&gt;
+                        li &lt;div onclick="location.href='https://www.fer.unizg.hr/'" style="color: red;"&gt;Klikni me&lt;/div&gt;
+                        li &lt;a href=&quot;javascript:alert(&apos;XSS&apos;)&quot;&gt;Klikni me&lt;/a&gt;
+                        li &lt;input type=&quot;text&quot; value=&quot;XSS&quot; onfocus=&quot;alert(&apos;XSS onFocus&apos;)&quot;&gt;
+                        li &lt;button onclick=&quot;alert(&apos;XSS&apos;)&quot;&gt;Klikni me&lt;/button&gt;
+
+                li Obrišemo primjere koji izvode XSS napad, ako se automatski izvršavaju i smetaju (ikona košarice ili gumb obriši sve)
                 li Uključimo zaštitu i ponovimo napade koje smo izveli
                 li Poslužitelj radi sanitizaciju teksta, skripte se ne izvode i prikazuje ih kao tekst
-
-            p *Kada je zaštita isključena i dodan je komentar on će uvijek biti nesiguran jer je spremljen bez sanitizacije 
 
         div.container
             div.comment
@@ -61,7 +63,7 @@ html
         div 
             h3 Zaštita napravljena pomoću
             ul 
-                li Sanitizacija teksta zamjenom znakova &lt;, &gt;, "", '' i `` pomoću odgovarajućih HTML entiteta
+                li Sanitizacija teksta zamjenom znakova &lt;, &gt;, "", '', `` i &amp; pomoću odgovarajućih HTML entiteta
                 li Secure i Http-Only zastavice onemogućuju pristup kolačićima putem JavaScripta
 
         div 
